@@ -13,10 +13,8 @@ func (app *application) routes() http.Handler {
 	// which will be used for every request our application receives.
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
-	// Create a new middleware chain containing the middleware specific to
-	// our dynamic application routes. For now, this chain will only contain
-	// the session middleware but we'll add more to it later.
-	dynamicMiddleware := alice.New(app.session.Enable)
+	// Add the authenticate() middleware to the chain.
+	dynamicMiddleware := alice.New(app.session.Enable, noSurf, app.authenticate)
 
 	mux := pat.New()
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
@@ -33,6 +31,9 @@ func (app *application) routes() http.Handler {
 	mux.Post("/user/login", dynamicMiddleware.ThenFunc(app.loginUser))
 	// Add the requireAuthentication middleware to the chain.
 	mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthentication).ThenFunc(app.logoutUser))
+
+	// Add a new GET /ping route.
+	mux.Get("/ping", http.HandlerFunc(ping))
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))

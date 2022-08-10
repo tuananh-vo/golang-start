@@ -11,20 +11,42 @@ import (
 	"os"
 	"time"
 
+	"snippetbox/pkg/models"
 	"snippetbox/pkg/models/mysql"
 
 	_ "github.com/go-sql-driver/mysql" // New import
 	"github.com/golangcollege/sessions"
 )
 
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	session       *sessions.Session
-	snippets      *mysql.SnippetModel
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	session  *sessions.Session
+	snippets interface {
+		Insert(string, string, string) (int, error)
+		Get(int) (*models.Snippet, error)
+		Latest() ([]*models.Snippet, error)
+	}
 	templateCache map[string]*template.Template
-	users         *mysql.UserModel
+	users         interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (int, error)
+		Get(int) (*models.User, error)
+	}
 }
+
+// type application struct {
+// 	errorLog      *log.Logger
+// 	infoLog       *log.Logger
+// 	session       *sessions.Session
+// 	snippets      *mysql.SnippetModel
+// 	templateCache map[string]*template.Template
+// 	users         *mysql.UserModel
+// }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")

@@ -12,6 +12,7 @@ import (
 
 // Define a templateData type to act as the holding structure for // any dynamic data that we want to pass to our HTML templates. // At the moment it only contains one field, but we'll add more // to it as the build progresses.
 type templateData struct {
+	CSRFToken       string
 	CurrentYear     int
 	Flash           string
 	Form            *forms.Form
@@ -22,7 +23,13 @@ type templateData struct {
 
 // Create a humanDate function which returns a nicely formatted string // representation of a time.Time object.
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 15:04")
+	// return t.Format("02 Jan 2006 at 15:04")
+	// Return the empty string if time has the zero value.
+	if t.IsZero() {
+		return ""
+	}
+	// Convert the time to UTC before formatting it.
+	return t.UTC().Format("02 Jan 2006 at 15:04")
 }
 
 // Initialize a template.FuncMap object and store it in a global variable. This is // essentially a string-keyed map which acts as a lookup between the names of our // custom template functions and the functions themselves.
