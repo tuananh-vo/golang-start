@@ -35,3 +35,12 @@ auditing our Go code, building binaries, and executing database migrations.
    7. Create user: CREATE ROLE greenlight WITH LOGIN PASSWORD 'pa55word';
    8. Install extensions: CREATE EXTENSION IF NOT EXISTS citext;
    9. Connect data postgres: psql --host=localhost --dbname=greenlight --username=greenlight
+7. Migrate postgres
+   macos: brew install golang-migrate
+   window, linux: curl -L https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz
+   mv migrate.linux-amd64 $GOPATH/bin/migrate
+8. Create folder/file migrate table:
+   migrate create -seq -ext=.sql -dir=./migrations create_movies_table
+   migrate create -seq -ext=.sql -dir=./migrations add_movies_check_constraints
+9. Run migrate
+   migrate -path=./migrations -database=$GREENLIGHT_DB_DSN up
