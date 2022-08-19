@@ -44,3 +44,46 @@ auditing our Go code, building binaries, and executing database migrations.
    migrate create -seq -ext=.sql -dir=./migrations add_movies_check_constraints
 9. Run migrate
    migrate -path=./migrations -database=$GREENLIGHT_DB_DSN up
+10. limit connection database: go run ./cmd/api -db-max-open-conns=1
+11. index: migrate create -seq -ext .sql -dir ./migrations add_movies_indexes
+12. migrate create -seq -ext=.sql -dir=./migrations create_users_table
+13. run : migrate -path=./migrations -database=$GREENLIGHT_DB_DSN up
+14. go get golang.org/x/crypto/bcrypt@latest
+15. migrate create -seq -ext .sql -dir ./migrations create_tokens_table
+16. migrate create -seq -ext .sql -dir ./migrations add_permissions
+17. Support add permission to database
+    psql $GREENLIGHT_DB_DSN
+
+    -- Set the activated field for alice@example.com to true.
+    UPDATE users SET activated = true WHERE email = 'alice@example.com';
+    -- Give all users the 'movies:read' permission
+    INSERT INTO users_permissions
+    SELECT id, (SELECT id FROM permissions WHERE code = 'movies:read') FROM users;
+    -- Give faith@example.com the 'movies:write' permission
+    INSERT INTO users_permissions
+    VALUES (
+    (SELECT id FROM users WHERE email = 'anhvt@gmail.com'),
+    (SELECT id FROM permissions WHERE code = 'movies:write')
+    );
+    -- List all activated users and their permissions.
+    SELECT email, array_agg(permissions.code) as permissions
+    FROM permissions
+    INNER JOIN users_permissions ON users_permissions.permission_id = permissions.id
+    INNER JOIN users ON users_permissions.user_id = users.id
+    WHERE users.activated = true
+    GROUP BY email;
+
+18. Supporting multiple dynamic origins: go run ./cmd/api -cors-trusted-origins="https://www.example.com https://staging.example.com"
+19. Run example cors
+    1. go run ./cmd/examples/cors/simple
+    2. run project main: go run ./cmd/api -cors-trusted-origins="http://localhost:9000"
+20. Run test display magic
+    1. go run ./cmd/api -limiter-enabled=false -db-max-open-conns=50 -db-max-idle-conns=50 -db-max-idle-time=20s -port=4000
+21. Load test with hey tool
+    1. BODY='{"email": "alice@example.com", "password": "pa55word"}'
+    2. hey -d "$BODY" -m "POST" http://localhost:4000/v1/tokens/authentication
+22. Recording HTTP Status Codes: go get github.com/felixge/httpsnoop@v1.0.1
+23. make run(main), make up(update database), make migration name=create_example_table (migrate new table)
+24. go env GOCACHE
+25. Force all packages to be rebuilt: go build -a -o=/bin/foo ./cmd/foo
+26. go clean -cache
